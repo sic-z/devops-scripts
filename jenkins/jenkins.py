@@ -131,10 +131,29 @@ class Jenkins:
             response = requests.post(job_url, auth=(self._user, self._passwd))
             
             if response.status_code == 201:
-                logging.log(logging.INFO, "trigger build %s success." % job_name)
+                logging.log(logging.INFO, "trigger build %s success, job_url: %s." % (job_name, job_url))
                 return True
             else:
-                logging.log(logging.INFO,"trigeer job %s failed." % job_name)
+                logging.log(logging.INFO,"trigeer job %s failed, job_url: %s." % (job_name, job_url))
+                return False
+        except Exception:
+            raise
+
+    # 此方法依赖于Jenkins配置：系统管理-全局安全配置：取消勾选防止跨站点请求伪造
+    def trigger_job_with_params(self, job_name, params):
+        job_url = "%s/job/%s/buildWithParameters?token=TOKEN" % (self.url, job_name)
+
+        for param in params.keys():
+            job_url = job_url + "&%s=%s" % (param, params[param])
+        
+        try:
+            response = requests.post(job_url, auth=(self._user, self._passwd))
+            
+            if response.status_code == 201:
+                logging.log(logging.INFO, "trigger build %s success, job_url: %s." % (job_name, job_url))
+                return True
+            else:
+                logging.log(logging.INFO,"trigeer job %s failed, job_url: %s." % (job_name, job_url))
                 return False
         except Exception:
             raise
